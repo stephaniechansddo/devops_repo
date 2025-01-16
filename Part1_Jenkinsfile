@@ -1,6 +1,11 @@
 pipeline {
     agent any
     stages {
+        stage('Declarative: Checkout SCM') {
+            steps {
+                checkout scm
+            }
+        }
         stage('One') {
             steps {
                 echo 'Continue from previous phase: Ready to deploy next environment.'
@@ -13,9 +18,11 @@ pipeline {
         }
         stage('Three') {
             steps {
-                sh '''
-                    #!/bin/bash
+                script {
+                    sh '''
                     set -e  # Exit immediately if a command exits with a non-zero status
+
+                    # Clean up and prepare directory
                     echo "Cleaning up /tmp/clone directory..."
                     puppet resource file /tmp/clone ensure=absent force=true
                     puppet resource file /tmp/clone ensure=directory
@@ -23,18 +30,29 @@ pipeline {
                     echo "Cloning repository..."
                     cd /tmp/clone
                     git clone https://github.com/stephaniechansddo/devops_repo.git
-                    
-                    echo "Running Bolt script on UAT container..."
-                    targets="puppetclient1.localdomain"
+
+                    echo "Checking if script_to_run exists..."
                     locate_script="/tmp/clone/devops_repo/script_to_run"
-                    
+
+                    # Check if the script exists before proceeding
+                    if [ ! -f "$locate_script" ]; then
+                        echo "Error: $locate_script not found!"
+                        exit 1
+                    fi
+
+                    # Make the script executable if it isn't already
                     if [ ! -x "$locate_script" ]; then
+                        echo "Making script executable: $locate_script"
                         chmod +x $locate_script
                     fi
-                    
+
+                    # Run the Bolt script on UAT container
+                    echo "Running Bolt script on UAT container..."
+                    targets="puppetclient1.localdomain"
                     bolt script run $locate_script -t $targets -u clientadm -p user123 --no-host-key-check --run-as root
                     echo "UAT container updated."
-                '''
+                    '''
+                }
             }
         }
         stage('Four') {
@@ -44,20 +62,31 @@ pipeline {
         }
         stage('Five') {
             steps {
-                sh '''
-                    #!/bin/bash
+                script {
+                    sh '''
                     set -e  # Exit immediately if a command exits with a non-zero status
+
                     echo "Running Bolt script on Production container..."
                     targets="puppetclient2.localdomain"
                     locate_script="/tmp/clone/devops_repo/script_to_run"
-                    
+
+                    # Check if the script exists before proceeding
+                    if [ ! -f "$locate_script" ]; then
+                        echo "Error: $locate_script not found!"
+                        exit 1
+                    fi
+
+                    # Make the script executable if it isn't already
                     if [ ! -x "$locate_script" ]; then
+                        echo "Making script executable: $locate_script"
                         chmod +x $locate_script
                     fi
-                    
+
+                    # Run the Bolt script on Production container
                     bolt script run $locate_script -t $targets -u clientadm -p user123 --no-host-key-check --run-as root
                     echo "Production container updated."
-                '''
+                    '''
+                }
             }
         }
         stage('Completed updating Operation') {
