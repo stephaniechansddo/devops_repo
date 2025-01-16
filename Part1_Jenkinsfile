@@ -17,7 +17,7 @@ pipeline {
                  puppet resource file /tmp/clone ensure=absent force=true;
                  puppet resource file /tmp/clone ensure=directory;
 	   cd /tmp/clone;
-	   git clone https://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@github.com/stephaniechansddo/devops_repo.git;
+	   git clone https://github.com/stephaniechansddo/devops_repo.git;
                  targets=puppetclient1.localdomain;
                  locate_script='/tmp/clone/devops_repo/script_to_run';
                  bolt script run $locate_script -t $targets -u clientadm -p user123 --no-host-key-check --run-as root;
