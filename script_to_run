@@ -18,4 +18,4 @@ cd /testdir/clone
 git clone https://github.com/stephaniechansddo/devops_repo.git
 
 # Copy the index.html file to the Apache web root
-cp -p /testdir/clone/devops-repo/index.html /var/www/html
+cp -p /testdir/clone/devops_repo/index.html /var/www/html
