@@ -14,13 +14,9 @@ pipeline {
         stage('Three') {
             steps {
                 sh '''#!/bin/bash
-                    puppet resource file /tmp/clone ensure=absent force=true;
-                    puppet resource file /tmp/clone ensure=directory;
-                    cd /tmp/clone;
-                    git clone https://github.com/stephaniechansddo/devops_repo.git;
-                    targets=puppetclient1.localdomain;
-                    locate_script='/tmp/clone/devops_repo/script_to_run';
-                    bolt script run $locate_script -t $targets -u clientadm -p user123 --no-host-key-check --run-as root;
+                targets=puppetclient1;
+                locate_script='/testdir/work/devops_repo/script_to_run';
+                bolt script run $locate_script -t $targets -u clientadm -p user123 --no-host-key-check --run-as root;
                 '''
                 echo "UAT container updated"
             }
@@ -33,8 +29,8 @@ pipeline {
         stage('Five') {
             steps {
                 sh '''#!/bin/bash
-                targets=puppetclient2.localdomain;
-                locate_script='/tmp/clone/devops_repo/script_to_run';
+                targets=puppetclient2;
+                locate_script='/testdir/clone/devops_repo/script_to_run';
                 bolt script run $locate_script -t $targets -u clientadm -p user123 --no-host-key-check --run-as root;
                 '''
                 echo "Production container updated"
